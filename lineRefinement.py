@@ -16,16 +16,23 @@ def extendLines(pt1, pt2, segmt, config):
     """
 
     sky_label = int(config["SEGMENTATION"]["SkyLabel"])
-    building_label = int(config["SEGMENTATION"]["BuildingLabel"])
-    ground_label = np.cast["int"](config["SEGMENTATION"]["GroundLabel"].split(','))
-    edge_thres = np.cast["int"](config["LINE_REFINE"]["Edge_Thres"].split(','))
+    building_label = np.asarray(config["SEGMENTATION"]["BuildingLabel"].split(','), dtype=int)
+    ground_label = np.asarray(config["SEGMENTATION"]["GroundLabel"].split(','), dtype=int)
+    edge_thres = np.asarray(config["LINE_REFINE"]["Edge_Thres"].split(','), dtype=int)
+    rows, cols = segmt.shape
 
-    if pt1[0] > pt2[0]:  # 0 is the x axis
+    if pt1[0] > pt2[0]:  # 0 is the x axis  # i.e. x-y order is assumed
         pt_up = pt2
         pt_down = pt1
     else:
         pt_up = pt1
         pt_down = pt2
+
+    if pt_up[0] >= rows or pt_up[0] < 0 or \
+            pt_up[1] >= cols or pt_up[1] < 0 or \
+            pt_down[0] >= rows or pt_down[0] < 0 or \
+            pt_down[1] >= cols or pt_down[1] < 0:
+        pass
 
     if np.linalg.norm(pt_down - pt_up) == 0:
         return [], []
@@ -34,8 +41,13 @@ def extendLines(pt1, pt2, segmt, config):
     pt_down_end = pt_down
     pt_middle = (pt_up + pt_down) / 2.0
 
-    rows, cols = segmt.shape
-    if pt_up_end[0] > rows - 2:
+    if pt_up_end[0] >= rows or pt_up_end[0] < 0 or \
+            pt_up_end[1] >= cols or pt_up_end[1] < 0 or \
+            pt_down_end[0] >= rows or pt_down_end[0] < 0 or \
+            pt_down_end[1] >= cols or pt_down_end[1] < 0:
+        pass
+
+    if pt_up_end[0] > rows - 2:  # here, y-x order is assumed
         pt_up_end[0] = rows - 2
     if pt_up_end[1] > cols - 2:
         pt_up_end[1] = cols - 2
@@ -44,12 +56,21 @@ def extendLines(pt1, pt2, segmt, config):
     if pt_down_end[1] > cols - 2:
         pt_down_end[1] = cols - 2
 
-    if pt_middle[0] >= rows - 1 or pt_middle[1] >= cols - 1:
+    if pt_up_end[0] >= rows or pt_up_end[0] < 0 or \
+            pt_up_end[1] >= cols or pt_up_end[1] < 0 or \
+            pt_down_end[0] >= rows or pt_down_end[0] < 0 or \
+            pt_down_end[1] >= cols or pt_down_end[1] < 0:
+        pass
+
+    if pt_middle[0] >= rows - 1 or pt_middle[1] >= cols - 1:  # here y-x order is assumed
         return [], []
 
-    if segmt[np.cast['int'](pt_up_end[0] + 0.5)][np.cast['int'](pt_up_end[1] + 0.5)] != building_label or \
-       segmt[np.cast['int'](pt_down_end[0] + 0.5)][np.cast['int'](pt_down_end[1] + 0.5)] != building_label or \
-       segmt[np.cast['int'](pt_middle[0] + 0.5)][np.cast['int'](pt_middle[1] + 0.5)] != building_label:
+    if not building_label.__contains__(
+            segmt[np.asarray(pt_up_end[0] + 0.5, dtype=int)][np.asarray(pt_up_end[1] + 0.5, dtype=int)]) or \
+            not building_label.__contains__(
+                segmt[np.asarray(pt_down_end[0] + 0.5, dtype=int)][np.asarray(pt_down_end[1] + 0.5, dtype=int)]) or \
+            not building_label.__contains__(
+                segmt[np.asarray(pt_middle[0] + 0.5, dtype=int)][np.asarray(pt_middle[1] + 0.5, dtype=int)]):
         return [], []
 
     flag = 1
@@ -58,37 +79,53 @@ def extendLines(pt1, pt2, segmt, config):
         if pt_up_end[0] < 0 or pt_up_end[1] < 0 or pt_up_end[1] >= rows - 1:
             flag = 0
             pt_up_end = pt_up_end + direction
+            if pt_up_end[0] >= rows or pt_up_end[0] < 0 or \
+                    pt_up_end[1] >= cols or pt_up_end[1] < 0 or \
+                    pt_down_end[0] >= rows or pt_down_end[0] < 0 or \
+                    pt_down_end[1] >= cols or pt_down_end[1] < 0:
+                pass
             continue
-        if segmt[np.cast['int'](pt_up_end[0] + 0.5)][np.cast['int'](pt_up_end[1] + 0.5)] == sky_label:
+        if segmt[np.asarray(pt_up_end[0] + 0.5, dtype=int)][np.asarray(pt_up_end[1] + 0.5, dtype=int)] == sky_label:
             flag = 0
             pt_up_end = pt_up_end + direction
+
+    if pt_up_end[0] >= rows or pt_up_end[0] < 0 or \
+            pt_up_end[1] >= cols or pt_up_end[1] < 0 or \
+            pt_down_end[0] >= rows or pt_down_end[0] < 0 or \
+            pt_down_end[1] >= cols or pt_down_end[1] < 0:
+        pass
+    # all points seem to stay within the image up to this point
 
     flag = 1
     out_of_building = False
     while flag:
         pt_down_end = pt_down_end + direction
-        if pt_down_end[0] >= cols - 1 or pt_down_end[1] < 0 or pt_down_end[1] >= rows - 1:
+        if pt_down_end[0] >= rows - 1 or pt_down_end[1] < 0 or pt_down_end[1] >= cols - 1:  # somehow, x-y order was assumed here originally
             flag = 0
             continue
-        if segmt[np.cast['int'](pt_down_end[0] + 0.5)][np.cast['int'](pt_down_end[1] + 0.5)] != building_label and \
-           not segmt[np.cast['int'](pt_down_end[0] + 0.5)][np.cast['int'](pt_down_end[1] + 0.5)] in ground_label:
+        if not building_label.__contains__(
+                segmt[np.asarray(pt_down_end[0], dtype=int)][np.asarray(pt_down_end[1], dtype=int)]) and \
+                not segmt[np.asarray(pt_down_end[0], dtype=int)][np.asarray(pt_down_end[1],
+                                                                            dtype=int)] in ground_label:  # removed + 0.5 here, which I think was just a way of rounding that caused an out of bounds error when a line goes to the edge
             out_of_building = True
         else:
-            if segmt[np.cast['int'](pt_down_end[0] + 0.5)][np.cast['int'](pt_down_end[1] + 0.5)] == building_label:
+            if building_label.__contains__(segmt[np.asarray(pt_down_end[0], dtype=int)][np.asarray(pt_down_end[1],
+                                                                                                   dtype=int)]):  # removed + 0.5 here, which I think was just a way of rounding that caused an out of bounds error when a line goes to the edge
                 out_of_building = False
-        if segmt[np.cast['int'](pt_down_end[0] + 0.5)][np.cast['int'](pt_down_end[1] + 0.5)] in ground_label and \
-                not out_of_building:
+        if segmt[np.asarray(pt_down_end[0], dtype=int)][np.asarray(pt_down_end[1], dtype=int)] in ground_label and \
+                not out_of_building:  # removed + 0.5 here, which I think was just a way of rounding that caused an out of bounds error when a line goes to the edge
             flag = 0
             pt_down_end = pt_down_end - direction
-        else: # reach the ground and the previous label is not building
-            if segmt[np.cast['int'](pt_down_end[0] + 0.5)][np.cast['int'](pt_down_end[1] + 0.5)] in ground_label:
+        else:  # reach the ground and the previous label is not building
+            if segmt[np.asarray(pt_down_end[0], dtype=int)][np.asarray(pt_down_end[1],
+                                                                       dtype=int)] in ground_label:  # removed + 0.5 here, which I think was just a way of rounding that caused an out of bounds error when a line goes to the edge
                 return [], []
             pass
-    if  pt_up_end[0] > cols - 1 - edge_thres or \
-        pt_up_end[1] < edge_thres or pt_up_end[1] > rows - edge_thres or \
-        pt_down_end[0] < edge_thres or pt_down_end[0] > cols - 1 - edge_thres or \
-        pt_down_end[1] < edge_thres or pt_down_end[1] > rows - 1 - edge_thres:
-        return [],[]
+    if pt_up_end[0] > cols - 1 - edge_thres or \
+            pt_up_end[1] < edge_thres or pt_up_end[1] > rows - edge_thres or \
+            pt_down_end[0] < edge_thres or pt_down_end[0] > cols - 1 - edge_thres or \
+            pt_down_end[1] < edge_thres or pt_down_end[1] > rows - 1 - edge_thres:
+        return [], []
     return pt_up_end, pt_down_end
 
 
@@ -115,6 +152,8 @@ def verticalLineExtending(img_name, vertical_lines, segimg, vptz, config, verbos
         line = lineRefinementWithVPT(line, vptz)
         a = line[0]
         b = line[1]
+        # sanity check
+        assert (a[0] < 400 and a[1] < 640 and b[0] < 400 and b[1] < 640)
         extd_a, extd_b = extendLines(a, b, segimg, config)
         if len(extd_a) == 0 or len(extd_b) == 0:
             continue
@@ -161,9 +200,9 @@ def verticalLineExtendingWithBRLines(img_name, vertical_lines, roof_lines, botto
             A = np.transpose(np.vstack([vl_direction, -rl_direction]))
             b = np.transpose(rl[0] - vl[0])
             x = np.matmul(np.linalg.inv(A), b)
-            pt = vl_direction*x[0] + vl[0]
+            pt = vl_direction * x[0] + vl[0]
 
-            pt = np.cast['int'](pt + 0.5)
+            pt = np.asarray(pt + 0.5, dtype=int)
 
             if x[0] > 2 or x[0] < -2:
                 continue
@@ -182,8 +221,8 @@ def verticalLineExtendingWithBRLines(img_name, vertical_lines, roof_lines, botto
                     pt_rl = pt
 
         if len(pt_rl) == 0:
-        #     vl[0] = pt_rl
-        # else:
+            #     vl[0] = pt_rl
+            # else:
             continue
 
         pt_bl = []
@@ -194,9 +233,9 @@ def verticalLineExtendingWithBRLines(img_name, vertical_lines, roof_lines, botto
             A = np.transpose(np.vstack([vl_direction, -bl_direction]))
             b = np.transpose(bl[0] - vl[0])
             x = np.matmul(np.linalg.inv(A), b)
-            pt = vl_direction*x[0] + vl[0]
+            pt = vl_direction * x[0] + vl[0]
 
-            pt = np.cast['int'](pt + 0.5)
+            pt = np.asarray(pt + 0.5, dtype=int)
 
             if x[0] > 2 or x[0] < -2:
                 continue
@@ -214,8 +253,8 @@ def verticalLineExtendingWithBRLines(img_name, vertical_lines, roof_lines, botto
                     pt_bl = pt
 
         if len(pt_bl) == 0:
-        #     vl[1] = pt_bl
-        # else:
+            #     vl[1] = pt_bl
+            # else:
             continue
 
         # if verbose:

@@ -37,10 +37,11 @@ if __name__ == '__main__':
                 vpt_fname = vpt_fname.replace('.jpg', 'vptpre.npz')
                 if not os.path.exists(vpt_fname):
                     vpt_fname = 'none'
+                assert vpt_fname == 'none'  # for testing, vansishing points are calculated later
 
                 # the file name of the detected line segments
                 line_fname = img_fname.replace('/imgs/', '/lines/')
-                line_fname = line_fname.replace('.jpg', 'nlines.npz')
+                line_fname = line_fname.replace('.jpg', '.npz')
 
                 # the file name of the semantic segmentation data
                 seg_fname = img_fname.replace('/imgs/', '/segs/')
@@ -60,7 +61,7 @@ if __name__ == '__main__':
                 fname_dict["zgt"] = zgt_fname
 
                 # estimation of building height
-                heightCalc(fname_dict, intrins, config, img_size=[640, 640], pitch=25, use_pitch_only=0, use_detected_vpt_only=0, verbose=True)
+                heightCalc(fname_dict, intrins, config, img_size=[400, 640], pitch=30, use_pitch_only=1, use_detected_vpt_only=0, verbose=True)
 
     # the end
     print('end')

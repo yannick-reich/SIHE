@@ -1,4 +1,4 @@
-#-*- encoding:utf-8 -*-
+# -*- encoding:utf-8 -*-
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,49 +32,49 @@ def gt_measurement(zgt_img, a, b, verbose=False):
 
     rows, cols = zgt_img.shape
 
-    row_check = lambda x : min(rows - 1, max(0, x))
+    row_check = lambda x: min(rows - 1, max(0, x))
     cols_check = lambda x: min(cols - 1, max(0, x))
-    pt_check = lambda pt:np.asarray([cols_check(pt[0]), row_check(pt[1])])
+    pt_check = lambda pt: np.asarray([cols_check(pt[0]), row_check(pt[1])])
 
     a = pt_check(a)
     b = pt_check(b)
 
     gt_org = 0
-    gt_expd= 0
+    gt_expd = 0
 
-    if zgt_img[a[1],a[0]] == 0 or zgt_img[b[1],b[0]] == 0:
+    if zgt_img[a[1], a[0]] == 0 or zgt_img[b[1], b[0]] == 0:
         gt_org = 0
     else:
-        gt_org = abs(zgt_img[a[1],a[0]] - zgt_img[b[1],b[0]])
+        gt_org = abs(zgt_img[a[1], a[0]] - zgt_img[b[1], b[0]])
 
-    direction = (a-b)/np.linalg.norm(a - b)
+    direction = (a - b) / np.linalg.norm(a - b)
 
     b_expd = copy.deepcopy(b)
     count = 1
     while zgt_img[b_expd[1], b_expd[0]] == 0 and a[1] < b_expd[1]:
-        b_expd = np.cast["int"](b + count*direction)
+        b_expd = np.cast["int"](b + count * direction)
         count = count + 1
     a_expd = copy.deepcopy(a)
     count = 1
 
-    if zgt_img[a_expd[1],a_expd[0]] == 0:
-        while a_expd[0]>0 and a_expd[0] <= cols -1 and a_expd[1] <=rows - 1 and zgt_img[a_expd[1],a_expd[0]] == 0:
-            a_expd = np.cast["int"](a - count*direction)
+    if zgt_img[a_expd[1], a_expd[0]] == 0:
+        while a_expd[0] > 0 and a_expd[0] <= cols - 1 and a_expd[1] <= rows - 1 and zgt_img[a_expd[1], a_expd[0]] == 0:
+            a_expd = np.cast["int"](a - count * direction)
             count = count + 1
     else:
-        while a_expd[0]>0 and a_expd[0] <= cols -1 and a_expd[1] >=0 and zgt_img[a_expd[1],a_expd[0]]!= 0:
-            a_expd = np.cast["int"](a + count*direction)
+        while a_expd[0] > 0 and a_expd[0] <= cols - 1 and a_expd[1] >= 0 and zgt_img[a_expd[1], a_expd[0]] != 0:
+            a_expd = np.cast["int"](a + count * direction)
             count = count + 1
-        a_expd = np.cast["int"](a + (count-2)*direction)
+        a_expd = np.cast["int"](a + (count - 2) * direction)
         pass
-    gt_expd = abs(zgt_img[a_expd[1],a_expd[0]] - zgt_img[b_expd[1],b_expd[0]])
+    gt_expd = abs(zgt_img[a_expd[1], a_expd[0]] - zgt_img[b_expd[1], b_expd[0]])
 
     if verbose:
         print("here---------------:")
         print(a_expd)
         print(b_expd)
-        print(zgt_img[a_expd[1],a_expd[0]])
-        print(gt_org,gt_expd)
+        print(zgt_img[a_expd[1], a_expd[0]])
+        print(gt_org, gt_expd)
 
     if verbose:
         plt.close()
@@ -88,7 +88,7 @@ def gt_measurement(zgt_img, a, b, verbose=False):
     return gt_org, gt_expd
 
 
-def sv_measurement(v1, v2, v3, x1, x2, zc = 2.5):
+def sv_measurement(v1, v2, v3, x1, x2, zc=2.5):
     """
     Use single-view metrology and three vanishing points to calculate height.
     :param v1: vanishing point on the horizontal vanishing line
@@ -162,7 +162,7 @@ def singleViewMeasWithCrossRatio(hori_v1, hori_v2, vert_v1, pt_top, pt_bottom, z
     dist_BD = np.linalg.norm(np.asarray([pt_top - pt_bottom]))
     dist_CD = np.linalg.norm(np.asarray([C - pt_bottom]))
 
-    height = dist_BD*dist_AC/(dist_CD*dist_AB)*zc
+    height = dist_BD * dist_AC / (dist_CD * dist_AB) * zc
     return height
 
 
@@ -188,7 +188,7 @@ def singleViewMeasWithCrossRatio_vl(hori_vline, vert_v1, pt_top, pt_bottom, zc=2
     dist_BD = np.linalg.norm(np.asarray([pt_top - pt_bottom]))
     dist_CD = np.linalg.norm(np.asarray([C - pt_bottom]))
 
-    height = dist_BD*dist_AC/(dist_CD*dist_AB)*zc
+    height = dist_BD * dist_AC / (dist_CD * dist_AB) * zc
     return height
 
 
@@ -221,7 +221,8 @@ def vp_calculation_with_pitch(w, h, pitch, focal_length):
     return v, vline
 
 
-def heightCalc(fname_dict, intrins, config, img_size=None, pitch=None, use_pitch_only=0, use_detected_vpt_only=0, verbose=False):
+def heightCalc(fname_dict, intrins, config, img_size=None, pitch=None, use_pitch_only=0, use_detected_vpt_only=0,
+               verbose=False):
     """
     Estimate the height of buildings.
     :param fname_dict: the dictionary of file names
@@ -242,7 +243,7 @@ def heightCalc(fname_dict, intrins, config, img_size=None, pitch=None, use_pitch
         vpt_fname = fname_dict["vpt"]
         img_fname = fname_dict["img"]
         line_fname = fname_dict["line"]
-        seg_fname =  fname_dict["seg"]
+        seg_fname = fname_dict["seg"]
         zgt_fname = fname_dict["zgt"]
 
         # ######### get the vanishing points
@@ -281,6 +282,9 @@ def heightCalc(fname_dict, intrins, config, img_size=None, pitch=None, use_pitch
         line_segs, scores = load_line_array(line_fname)
         seg_img = load_seg_array(seg_fname)
 
+        # sanity check
+        assert (not np.any(line_segs[:, :, 0] >= w) and not np.any(line_segs[:, :, 1] >= h))
+
         # save the visualization of the line/segmentation results
         org_image = skimage.io.imread(img_fname)
         for i, t in enumerate([0.94]):  # lines with different score thresholds ([0.94, 0.95, 0.96, 0.97, 0.98, 0.99])
@@ -313,7 +317,7 @@ def heightCalc(fname_dict, intrins, config, img_size=None, pitch=None, use_pitch
             integrated_save_dir = os.path.dirname(integrated_save_name)
             if not os.path.exists(integrated_save_dir):
                 os.makedirs(integrated_save_dir)
-            # plt.show()
+            plt.show()
             plt.close()
 
         # ######### processing the line segments
@@ -324,8 +328,13 @@ def heightCalc(fname_dict, intrins, config, img_size=None, pitch=None, use_pitch
             plt.imshow(seg_img, alpha=0.5)
 
         # classify the line segments and extend vertical lines
-        verticals = filter_lines_outof_building_ade20k(img_fname, line_segs, scores, seg_img, vps, config, use_pitch_only)
+        verticals = filter_lines_outof_building_ade20k(img_fname, line_segs, scores, seg_img, vps, config,
+                                                       use_pitch_only)
+        # sanity check
+        assert (not np.any(line_segs[:, :, 0] >= w) and not np.any(line_segs[:, :, 1] >= h))
         verticals = verticalLineExtending(img_fname, verticals, seg_img, [vps[2, 1], vps[2, 0]], config)
+        # sanity check
+        assert (not np.any(line_segs[:, :, 0] >= w) and not np.any(line_segs[:, :, 1] >= h))
         # verticals, bottoms, roofs = filter_lines_outof_building_ade20k(img_fname, line_segs, scores, seg_img, vps, config, use_pitch_only)
         # verticals = verticalLineExtendingWithBRLines(img_fname, verticals, roofs, bottoms, seg_img, config)
 
@@ -342,11 +351,11 @@ def heightCalc(fname_dict, intrins, config, img_size=None, pitch=None, use_pitch
             b = line[1]
 
             # remove duplicate a,b because of integer
-            if len(check_list) !=0 :
+            if len(check_list) != 0:
                 flag = 0
-                for a0,a1,b0,b1 in check_list:
+                for a0, a1, b0, b1 in check_list:
                     if a0 == a[0] and a1 == a[1] and b0 == b[0] and b1 == b[1]:
-                        flag=1
+                        flag = 1
                         break
                 if flag:
                     continue
@@ -382,9 +391,10 @@ def heightCalc(fname_dict, intrins, config, img_size=None, pitch=None, use_pitch
             gt_exist = int(config["GROUND_TRUTH"]["Exist"])
             if gt_exist:
                 zgt_img = load_zgts(zgt_fname)
-                ht_gt_org, ht_gt_expd = gt_measurement(zgt_img,np.asarray([a[1], a[0]]), np.asarray([b[1], b[0]]))
+                ht_gt_org, ht_gt_expd = gt_measurement(zgt_img, np.asarray([a[1], a[0]]), np.asarray([b[1], b[0]]))
             else:
-                ht_gt_org, ht_gt_expd = ht*0, ht*0
+                ht_gt_org, ht_gt_expd = ht * 0, ht * 0
+                assert ht_gt_org == 0 and ht_gt_expd == 0
             ht_set.append([ht, a, b, ht_gt_org, ht_gt_expd])
 
         if verbose:
@@ -420,7 +430,8 @@ def heightCalc(fname_dict, intrins, config, img_size=None, pitch=None, use_pitch
                 a = lines[j][1]
                 b = lines[j][2]
                 if verbose:
-                    ax_line, = plt.plot([a[1], b[1]], [a[0], b[0]], c=colors_tables[i % len(colors_tables)], linewidth=2)
+                    ax_line, = plt.plot([a[1], b[1]], [a[0], b[0]], c=colors_tables[i % len(colors_tables)],
+                                        linewidth=2)
                     plt.scatter(a[1], a[0], **PLTOPTS)
                     plt.scatter(b[1], b[0], **PLTOPTS)
             ax_legends.append(ax_line)
@@ -441,5 +452,5 @@ def heightCalc(fname_dict, intrins, config, img_size=None, pitch=None, use_pitch
 
             pass
 
-    except IOError:
-        print("file does not exist\n")
+    except IOError as e:
+        print(f"file does not exist\n {e}")

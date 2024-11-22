@@ -66,8 +66,8 @@ def check_if_line_lies_in_building_area(seg_img, a, b, config)->bool:
     ppd_dir = np.asarray([norm_direction[1], -norm_direction[0]])
 
     sky_label = int(config["SEGMENTATION"]["SkyLabel"])
-    building_label = int(config["SEGMENTATION"]["BuildingLabel"])
-    ground_label = np.cast["int"](config["SEGMENTATION"]["GroundLabel"].split(','))
+    building_label = np.asarray(config["SEGMENTATION"]["BuildingLabel"].split(','), dtype=int)
+    ground_label = np.asarray(config["SEGMENTATION"]["GroundLabel"].split(','), dtype=int)
 
     ratio = 10
     ppd_dir = ratio * ppd_dir
@@ -88,12 +88,12 @@ def check_if_line_lies_in_building_area(seg_img, a, b, config)->bool:
     for pcl in point_check_list:
         total_num = total_num + 1
         # swap the x,y coordinate
-        y_int = np.cast["int"](pcl[0] + 0.5)
-        x_int = np.cast["int"](pcl[1] + 0.5)
+        y_int = np.asarray(pcl[0] + 0.5, dtype=int)
+        x_int = np.asarray(pcl[1] + 0.5, dtype=int)
         if x_int < 0 or x_int > cols - 1 or y_int < 0 or y_int > rows - 1:
             local_num = local_num + 1
             continue
-        if seg_img[y_int, x_int] == building_label:
+        if  building_label.__contains__(seg_img[y_int, x_int]):
             local_num = local_num + 1
         if np.remainder(total_num, 3) == 0 and local_num == 0:
             flag = False
@@ -118,7 +118,7 @@ def check_if_bottom_lines(seg_img, a, b, config)->bool:
     norm_direction = (a - b) / np.linalg.norm(a - b)
     ppd_dir = np.asarray([norm_direction[1], -norm_direction[0]])
 
-    ground_label = np.cast["int"](config["SEGMENTATION"]["GroundLabel"].split(','))
+    ground_label = np.asarray(config["SEGMENTATION"]["GroundLabel"].split(','), dtype=int)
 
     ratio = 10
     ppd_dir = ratio * ppd_dir
@@ -137,8 +137,8 @@ def check_if_bottom_lines(seg_img, a, b, config)->bool:
     # count = 0
     for pcl in point_check_list:
         # swap the x,y coordinate
-        y_int = np.cast["int"](pcl[0] + 0.5)
-        x_int = np.cast["int"](pcl[1] + 0.5)
+        y_int = np.asarray(pcl[0] + 0.5, dtype=int)
+        x_int = np.asarray(pcl[1] + 0.5, dtype=int)
         if x_int < 0 or x_int > cols - 1 or y_int < 0 or y_int > rows - 1:
             # count = count + 1
             continue
@@ -187,8 +187,8 @@ def check_if_roof_lines(seg_img, a, b, config)->bool:
     # count = 0
     for pcl in point_check_list:
         # swap the x,y coordinate
-        y_int = np.cast["int"](pcl[0] + 0.5)
-        x_int = np.cast["int"](pcl[1] + 0.5)
+        y_int = np.asarray(pcl[0] + 0.5, dtype=int)
+        x_int = np.asarray(pcl[1] + 0.5, dtype=int)
         if x_int < 0 or x_int > cols - 1 or y_int < 0 or y_int > rows - 1:
             # count = count + 1
             continue
@@ -455,7 +455,7 @@ def clausterLinesWithCenters(ht_set, config, using_height=False):
 
     try:
         clustering = DBSCAN(eps=max_DBSAN_dist, min_samples=1).fit(X)
-    except:
+    except ValueError as e:
         print("!!! error in clustering: Expected 2D array, got 1D array instead.    Return no results")
         clustered_lines = None
         return clustered_lines
